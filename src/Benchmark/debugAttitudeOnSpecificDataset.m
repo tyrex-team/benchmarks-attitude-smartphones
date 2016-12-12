@@ -125,11 +125,9 @@ if strcmp(coordinateSystem, 'ned')
 	s.attitude(:,2:5) = quatmultiply(qRotENUToNED, s.attitude(:,2:5));
 end
 
-% Sensor's attitude from our iPhone app is defined in magnetic north frame 
-if ~strcmp(device, 'n5')
-	qMagneticToTrue = dcm2quat(rotz(context.magnetic.declination));
-	s.attitude(:,2:5) = quatmultiply(qMagneticToTrue, s.attitude(:,2:5));
-end
+% Sensor's attitude from our iPhone app and from Android app are defined in magnetic north frame 
+qMagneticToTrue = dcm2quat(rotz(context.magnetic.declination));
+s.attitude(:,2:5) = quatmultiply(qMagneticToTrue, s.attitude(:,2:5));
 
 
 

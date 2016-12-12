@@ -399,12 +399,11 @@ classdef AttitudeBenchmarks < handle
 				datasetSmartphone = loadAndroidDataset([obj.androidDatasetsPath folder]);
 			elseif strcmp(os, 'ios')
 				datasetSmartphone = loadiOSDataset([obj.iosDatasetsPath folder]);
-				
-				% Sensor's attitude from our iPhone app is defined in magnetic north frame 
-				qMagneticToTrue = dcm2quat(rotz(obj.context.magnetic.declination));
-				datasetSmartphone.attitude(:,2:5) = quatmultiply(qMagneticToTrue, datasetSmartphone.attitude(:,2:5));
 			end
 
+			% Sensor's attitude from our iPhone app is defined in magnetic north frame 
+			qMagneticToTrue = dcm2quat(rotz(obj.context.magnetic.declination));
+			datasetSmartphone.attitude(:,2:5) = quatmultiply(qMagneticToTrue, datasetSmartphone.attitude(:,2:5));
 			
 			% Load reference measurements
 			datasetQualisys = loadQualisysDataset([obj.qualisysDatasetsPath folder]);
