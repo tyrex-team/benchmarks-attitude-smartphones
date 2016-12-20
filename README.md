@@ -18,7 +18,7 @@ To start, open a matlab console. Go to **src** folder. Add this folder and subfo
 
 Create a new benchmark instance. Load sensors noises, calibrations and datasets. Then start the benchmark process:
 
-    benchmark = AttitudeBenchmark;
+    benchmark = AttitudeBenchmarks;
     benchmark.load;
 	benchmark.process;
 
