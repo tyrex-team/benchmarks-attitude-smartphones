@@ -59,10 +59,10 @@ classdef QMichelObsExtmagWtRep < AttitudeFilter
 
 				for i=1:size(obj.oldValues, 1)
 					dT = obj.oldValues(i, 2);
-					gyr = obj.oldValues(i, 3:5);
-					acc = obj.oldValues(i, 6:8);
-					mag = obj.oldValues(i, 9:11);
-					obj.updateInternal(gyr, acc, mag, dT, false);
+					gyrOld = obj.oldValues(i, 3:5);
+					accOld = obj.oldValues(i, 6:8);
+					magOld = obj.oldValues(i, 9:11);
+					obj.updateInternal(gyrOld, accOld, magOld, dT, false);
 				end
 				obj.Beta = tmpBeta;
 			end
