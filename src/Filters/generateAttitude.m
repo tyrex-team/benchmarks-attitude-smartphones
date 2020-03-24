@@ -15,7 +15,7 @@
 % 	Sabatini, SabatiniExtacc, SabatiniExtmag, SabatiniExtaccExtmag
 % 	MichelObs, MichelObsExtmag','MichelObsExtmagWt, MichelObsExtmagWtRep
 % 	Renaudin, RenaudinSn, RenaudinB, RenaudinBG, RenaudinExtacc, RenaudinExtmag, RenaudinExtaccExtmag, RenaudinBGExtaccExtmag
-% 	Ekf, EkfExp, EkfLJ, EkfSn, EkfRev, EkfRevSn
+% 	Ekf, EkfExp, EkfLJ, EkfSn, EkfRev, EkfRevSn, EkfWithoutMag
 % 	MichelEkf, MichelEkfSn, MichelEkfExtmag, MichelEkfExtmagWt, MichelEkfExtmagWtRep
 %
 % context - structure with properties about the geographic and inertial context. 
@@ -69,6 +69,7 @@ function attitude = generateAttitude(timestamp, acc, gyr, mag, algorithm, contex
 		case 'ekfrev', filter = QEkfRev;
 		case 'ekfexp', filter = QEkfExp;
 		case 'ekflj', filter = QEkfLongJacobian;
+		case 'ekfwithoutmag', filter = QEkfWithoutMag;
 		case 'sabatini', filter = QSabatini; 
 		case 'sabatiniextacc', filter = QSabatiniExtacc;
 		case 'sabatiniextmag', filter = QSabatiniExtmag; 
