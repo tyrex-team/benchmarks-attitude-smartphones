@@ -1,7 +1,7 @@
 % Thibaud Michel
 % January 2014
 
-function showMatrix(figureName, datasets, legends, titles, txlabel, tylabel)
+function showMatrix(figureName, datasets, legends, titles, txlabel, tylabel, minMax)
 
     vectorSize = size(datasets{1}, 2) - 1;
 
@@ -23,6 +23,10 @@ function showMatrix(figureName, datasets, legends, titles, txlabel, tylabel)
 
         if exist('txlabel') xlabel(txlabel); end
         if exist('tylabel') ylabel(tylabel); end
+
+        if exist('minMax', 'var')
+            axis([-inf inf minMax(1) minMax(2)])
+        end
     end
 
 end
