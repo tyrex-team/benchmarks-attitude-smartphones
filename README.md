@@ -53,7 +53,7 @@ Authors
 -------
 
 Thibaud Michel  
-<thibaud.michel@inria.fr>  
+<thibaud.michel@gmail.com>  
 
 Hassen Fourati  
 Pierre Genev&egrave;s  
