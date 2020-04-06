@@ -7,10 +7,10 @@
 %
 % algorithm - algorithm to generate attitude from measurements
 %	Gyro
-% 	Mahony, MahonyB
+% 	Mahony, MahonyB, MahonyMartin, MahonyMartinExtmagWtRep
 % 	Madgwick, MadgwickB
-% 	Fourati, FouratiExtacc
-% 	Martin
+% 	Fourati, FouratiExtacc, FouratiMartin, FouratiMartinExtmagWtRep
+% 	Martin, MartinB, MartinEkf
 % 	Choukroun, ChoukrounSn
 % 	Sabatini, SabatiniExtacc, SabatiniExtmag, SabatiniExtaccExtmag
 % 	MichelObs, MichelObsExtmag','MichelObsExtmagWt, MichelObsExtmagWtRep
@@ -53,10 +53,16 @@ function attitude = generateAttitude(timestamp, acc, gyr, mag, algorithm, contex
 		case 'madgwick', filter = QMadgwick; 
 		case 'madgwickb', filter = QMadgwickB;
 		case 'mahony', filter = QMahony; 
+		case 'mahonymartin', filter = QMahonyMartin; 
+		case 'mahonymartinextmagwtrep', filter = QMahonyMartinExtmagWtRep;
 		case 'mahonyb', filter = QMahonyB;
 		case 'fourati', filter = QFourati; 
 		case 'fouratiextacc', filter = QFouratiExtacc;
+		case 'fouratimartin', filter = QFouratiMartin; 
+		case 'fouratimartinextmagwtrep', filter = QFouratiMartinExtmagWtRep;
 		case 'martin', filter = QMartin;
+		case 'martinb', filter = QMartinB;
+		case 'martinekf', filter = QMartinEkf;
 		case 'michelobs', filter = QMichelObs; 
 		case 'michelobsextmag', filter = QMichelObsExtmag; 
 		case 'michelobsextmagwt', filter = QMichelObsExtmagWt;
@@ -65,11 +71,11 @@ function attitude = generateAttitude(timestamp, acc, gyr, mag, algorithm, contex
 		% EKF
 		case 'ekfsn', filter = QEkf; useSensorNoises = true;
 		case 'ekf', filter = QEkf;
+		case 'ekfwithoutmag', filter = QEkfWithoutMag;
 		case 'ekfrevsn', filter = QEkfRev; useSensorNoises = true;
 		case 'ekfrev', filter = QEkfRev;
 		case 'ekfexp', filter = QEkfExp;
 		case 'ekflj', filter = QEkfLongJacobian;
-		case 'ekfwithoutmag', filter = QEkfWithoutMag;
 		case 'sabatini', filter = QSabatini; 
 		case 'sabatiniextacc', filter = QSabatiniExtacc;
 		case 'sabatiniextmag', filter = QSabatiniExtmag; 
