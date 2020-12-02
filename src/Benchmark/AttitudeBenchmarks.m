@@ -22,7 +22,7 @@ classdef AttitudeBenchmarks < handle
 
         coordinateSystem = 'enu';
 
-        url = '../datasets/saved/benchmark.mat';
+        path = '../datasets/saved/benchmark.mat';
 
         androidDatasetsPath = '../datasets/android/';
         iosDatasetsPath = '../datasets/ios/';
@@ -33,13 +33,13 @@ classdef AttitudeBenchmarks < handle
     methods (Static)
 
         function open()
-            disp('Type load(AttitudeBenchmarks.url); in your workspace, the class will be stored in variable benchmark');
+            disp('Type load(AttitudeBenchmarks.path); in your workspace, the class will be stored in variable benchmark');
         end
 
         function save()
-            directory = fileparts(AttitudeBenchmarks.url);
+            directory = fileparts(AttitudeBenchmarks.path);
             if ~exist(directory, 'dir') mkdir(directory); end
-            disp('Type save(AttitudeBenchmarks.url, ''benchmark'', ''-v7.3''); in your workspace');
+            disp('Type save(AttitudeBenchmarks.path, ''benchmark'', ''-v7.3''); in your workspace');
         end
 
     end
