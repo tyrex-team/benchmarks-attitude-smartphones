@@ -1,12 +1,11 @@
-
 classdef IMUData < handle
 
-	properties(Access = public)
-		
-		magnetometer
-		gyroscope
-		accelerometer
+    properties (Access = public)
 
-	end
-	
+        magnetometer
+        gyroscope
+        accelerometer
+
+    end
+
 end

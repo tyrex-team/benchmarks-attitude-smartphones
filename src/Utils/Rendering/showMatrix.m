@@ -6,17 +6,19 @@ function showMatrix(figureName, datasets, legends, titles, txlabel, tylabel, min
     vectorSize = size(datasets{1}, 2) - 1;
 
     figure('name', figureName);
-    
+
     col = hsv(length(datasets));
 
     for i = 1:vectorSize
 
         subplot(vectorSize, 1, i);
-        hold on; 
+        hold on;
         grid on;
+
         for k = 1:length(datasets)
-            plot(datasets{k}(:,1), datasets{k}(:,i+1), 'color', col(k,:)); 
+            plot(datasets{k}(:, 1), datasets{k}(:, i + 1), 'color', col(k, :));
         end
+
         hold off;
         legend(legends);
         title(titles{i});
@@ -27,7 +29,7 @@ function showMatrix(figureName, datasets, legends, titles, txlabel, tylabel, min
         if exist('minMax', 'var')
             axis([-inf inf minMax(1) minMax(2)])
         end
+
     end
 
 end
-

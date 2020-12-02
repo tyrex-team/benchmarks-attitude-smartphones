@@ -5,9 +5,9 @@
 % IEEE Transactions on, vol. 53, no. 5, pp. 1203–1218, 2008.
 % https://hal.archives-ouvertes.fr/hal-00488376
 %
-% It has been implemented by S.O.H. Madgwick and modified by T. Michel 
+% It has been implemented by S.O.H. Madgwick and modified by T. Michel
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -16,34 +16,36 @@
 
 classdef QMahony < AttitudeFilter
 
-	properties (Access = public)
-		Beta = 1; 
+    properties (Access = public)
+        Beta = 1;
 
-		k1 = 1;
-		k2 = 1;
-	end    
- 
-	methods (Access = public)
+        k1 = 1;
+        k2 = 1;
+    end
 
-		function q = update(obj, gyr, acc, mag, dT)
-			q = obj.quaternion;
+    methods (Access = public)
 
-			acc = acc / norm(acc);
- 			mag = mag / norm(mag); 
+        function q = update(obj, gyr, acc, mag, dT)
+            q = obj.quaternion;
+
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
 
             v = quatrotate(q, obj.AccRefNormalized);
             w = quatrotate(q, obj.MagRefNormalized);
 
-			% Error is sum of cross product between estimated direction and measured direction of fields
-			e = obj.k1 * cross(acc, v) + obj.k2 * cross(mag, w);
+            % Error is sum of cross product between estimated direction and measured direction of fields
+            e = obj.k1 * cross(acc, v) + obj.k2 * cross(mag, w);
 
-			% Apply feedback terms
-			gyr = gyr + obj.Beta * e ;            
-			
-			q = quatmultiply(q, [1  0.5 * dT * gyr]);
-			q = q / norm(q);
+            % Apply feedback terms
+            gyr = gyr + obj.Beta * e;
 
-			obj.quaternion = q;
-		end
-	end
+            q = quatmultiply(q, [1 0.5 * dT * gyr]);
+            q = q / norm(q);
+
+            obj.quaternion = q;
+        end
+
+    end
+
 end

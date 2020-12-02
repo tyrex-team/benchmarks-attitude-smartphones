@@ -3,7 +3,7 @@
 %
 % It has been implemented by T. Michel
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -12,50 +12,47 @@
 
 classdef QEkfRev < ExtendedKalmanFilter
 
-	methods (Access = public)
+    methods (Access = public)
 
-		function q = update(obj, gyr, acc, mag, dT)
-			q = obj.quaternion.';
+        function q = update(obj, gyr, acc, mag, dT)
+            q = obj.quaternion.';
 
-			acc = acc/norm(acc);
-			mag = mag/norm(mag);
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
 
+            % -- Prediction ---
 
-			% -- Prediction ---
+            F = obj.C([1 0.5 * dT * gyr]);
+            q_apriori = F * q;
 
-			F = obj.C([1 0.5 * dT * gyr]);
-			q_apriori = F * q; 
+            E = [-q(2:4).'; skew(q(2:4)) + q(1) * eye(3)];
+            Qk = (dT / 2)^2 * (E * obj.noises.gyroscope * E.');
 
-			E = [-q(2:4).' ; skew(q(2:4)) + q(1) * eye(3)];
-			Qk = (dT / 2)^2 * (E * obj.noises.gyroscope * E.');
+            P_apriori = F * obj.P * F.' + Qk;
 
-			P_apriori = F * obj.P * F.' + Qk;
+            % -- --------- ---
 
-			% -- --------- ---
+            % -- Correction --
 
+            dz = [mag - quatrotate(q_apriori, obj.MagRefNormalized) ...
+                    acc - quatrotate(q_apriori, obj.AccRefNormalized)].';
 
+            H = [jacobianES(q_apriori, obj.MagRefNormalized)
+                jacobianES(q_apriori, obj.AccRefNormalized)];
 
-			% -- Correction --
+            R = [obj.noises.magnetometer zeros(3, 3); zeros(3, 3) obj.noises.accelerometer];
 
-			dz = [	mag - quatrotate(q_apriori, obj.MagRefNormalized) ...
-					acc - quatrotate(q_apriori, obj.AccRefNormalized)].';
+            K = P_apriori * H.' * (H * P_apriori * H.' + R)^ - 1;
+            q = q_apriori + K * dz;
+            P = (eye(4) - K * H) * P_apriori;
 
-			H = [ 	jacobianES(q_apriori, obj.MagRefNormalized)
-					jacobianES(q_apriori, obj.AccRefNormalized)];
+            % -- --------- ---
 
-			R = [obj.noises.magnetometer zeros(3,3) ; zeros(3,3) obj.noises.accelerometer];
+            q = q.' / norm(q);
+            obj.quaternion = q;
+            obj.P = P;
+        end
 
-		
-			K = P_apriori*H.' * (H*P_apriori*H.' + R)^-1;
-			q = q_apriori + K * dz;
-			P = (eye(4) - K*H) * P_apriori;
+    end
 
-			% -- --------- ---
-
-
-			q = q.'/norm(q);
-			obj.quaternion = q;  
-			obj.P = P;
-		end
-	end
 end

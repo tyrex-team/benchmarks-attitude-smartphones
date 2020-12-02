@@ -1,9 +1,9 @@
-% This algorithm is based on QMichelEkf and an external magnetic detector 
+% This algorithm is based on QMichelEkf and an external magnetic detector
 % 	has been added
 %
 % This algorithm has been implemented by T. Michel
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -14,68 +14,68 @@ classdef QMichelEkfExtmag < ExtendedKalmanFilter
 
     properties (Access = private)
 
-		MagNormThreshold = 15;
+        MagNormThreshold = 15;
 
-	end
-    
-    methods(Access = public)
+    end
 
-		function q = update(obj, gyr, acc, mag, dT)
+    methods (Access = public)
 
-			magUpdate = abs(norm(mag) - obj.MagRefNorm) < obj.MagNormThreshold;
+        function q = update(obj, gyr, acc, mag, dT)
 
-			% Use the normal filter
-			q = obj.updateInternal(gyr, acc, mag, dT, magUpdate);
-		end
-	end
+            magUpdate = abs(norm(mag) - obj.MagRefNorm) < obj.MagNormThreshold;
+
+            % Use the normal filter
+            q = obj.updateInternal(gyr, acc, mag, dT, magUpdate);
+        end
+
+    end
 
     methods (Access = private)
 
-		function [q, P] = updateInternal(obj, gyr, acc, mag, dT, magUpdate)
-			
-			q = obj.quaternion.';
+        function [q, P] = updateInternal(obj, gyr, acc, mag, dT, magUpdate)
 
-			acc = acc/norm(acc);
-			mag = mag/norm(mag);
+            q = obj.quaternion.';
 
-			if ~magUpdate, Rmag = eye(3) * 1e6; else Rmag = obj.noises.magnetometer; end
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
 
-			% -- Prediction ---
+            if ~magUpdate, Rmag = eye(3) * 1e6; else Rmag = obj.noises.magnetometer; end
 
-			F = obj.C([1 0.5 * dT * gyr]);
-			q_apriori = F * q; 
+            % -- Prediction ---
 
-			E = [-q(2:4).' ; skew(q(2:4)) + q(1) * eye(3)];
-			Qk = (dT / 2)^2 * (E * obj.noises.gyroscope * E.');
+            F = obj.C([1 0.5 * dT * gyr]);
+            q_apriori = F * q;
 
-			P_apriori = F * obj.P * F.' + Qk;
+            E = [-q(2:4).'; skew(q(2:4)) + q(1) * eye(3)];
+            Qk = (dT / 2)^2 * (E * obj.noises.gyroscope * E.');
 
-			% -- --------- ---
+            P_apriori = F * obj.P * F.' + Qk;
 
+            % -- --------- ---
 
-			% -- Correction --
+            % -- Correction --
 
-			q_apriori_inv = [ q_apriori(1) ; -q_apriori(2:4)];
+            q_apriori_inv = [q_apriori(1); -q_apriori(2:4)];
 
-			dz = [ 	obj.MagRefNormalized - quatrotate(q_apriori_inv, mag) ...
-					obj.AccRefNormalized - quatrotate(q_apriori_inv, acc)].';
+            dz = [obj.MagRefNormalized - quatrotate(q_apriori_inv, mag) ...
+                    obj.AccRefNormalized - quatrotate(q_apriori_inv, acc)].';
 
-			H = [	jacobianSE(q_apriori, mag)
-					jacobianSE(q_apriori, acc)];
+            H = [jacobianSE(q_apriori, mag)
+                jacobianSE(q_apriori, acc)];
 
-			R = [Rmag zeros(3,3) ; zeros(3,3) obj.noises.accelerometer];
+            R = [Rmag zeros(3, 3); zeros(3, 3) obj.noises.accelerometer];
 
-		
-			K = P_apriori*H.' * (H*P_apriori*H.' + R)^-1;
-			q = q_apriori + K * dz;
-			P = (eye(4) - K*H) * P_apriori;
+            K = P_apriori * H.' * (H * P_apriori * H.' + R)^ - 1;
+            q = q_apriori + K * dz;
+            P = (eye(4) - K * H) * P_apriori;
 
-			% -- --------- ---
+            % -- --------- ---
 
+            q = q.' / norm(q);
+            obj.P = P;
+            obj.quaternion = q;
+        end
 
-			q = q.'/norm(q);
-			obj.P = P;
-			obj.quaternion = q;
-		end
-	end
+    end
+
 end

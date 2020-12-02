@@ -14,7 +14,7 @@
 %
 % It has been implemented by H. Fourati and modified by T. Michel.
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -24,46 +24,45 @@
 classdef QFouratiExtacc < AttitudeFilter
 
     properties (Access = private)
-		Beta = 0.3;
-		Ka = 2;
-		Km = 1;
+        Beta = 0.3;
+        Ka = 2;
+        Km = 1;
 
-		AccNormThreshold = 0.5;
-	end
-    
-    methods(Access = public)
+        AccNormThreshold = 0.5;
+    end
 
-		function q = update(obj, gyr, acc, mag, dT)
+    methods (Access = public)
 
-			q = obj.quaternion;
-			
-			Km = obj.Km;
-			Ka = obj.Ka;
+        function q = update(obj, gyr, acc, mag, dT)
 
-			badAcc = abs(norm(acc) - obj.AccRefNorm) > obj.AccNormThreshold;
-			if badAcc, Ka = 0; end
+            q = obj.quaternion;
 
-			acc = acc/norm(acc);
-			mag = mag/norm(mag);
+            Km = obj.Km;
+            Ka = obj.Ka;
 
-			estimate_A = quatrotate(q, obj.AccRefNormalized);
-			estimate_M = quatrotate(q, obj.MagRefNormalized);
+            badAcc = abs(norm(acc) - obj.AccRefNorm) > obj.AccNormThreshold;
+            if badAcc, Ka = 0; end
 
-			Measure = [acc  mag];
-			Estimate = [estimate_A  estimate_M];
-			delta = 2 * [Ka * skew(estimate_A) ; Km * skew(estimate_M)]';
-			
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
 
-			% Gradient decent algorithm corrective step
-			dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^-1 * delta)';
+            estimate_A = quatrotate(q, obj.AccRefNormalized);
+            estimate_M = quatrotate(q, obj.MagRefNormalized);
 
-			qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
-			q = q + qDot * dT;
-			q = q/norm(q);
+            Measure = [acc mag];
+            Estimate = [estimate_A estimate_M];
+            delta = 2 * [Ka * skew(estimate_A); Km * skew(estimate_M)]';
 
-			obj.quaternion = q;
-		end
+            % Gradient decent algorithm corrective step
+            dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^ - 1 * delta)';
 
-		
-    end 
+            qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
+            q = q + qDot * dT;
+            q = q / norm(q);
+
+            obj.quaternion = q;
+        end
+
+    end
+
 end

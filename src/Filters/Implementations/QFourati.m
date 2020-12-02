@@ -14,7 +14,7 @@
 %
 % It has been implemented by H. Fourati and modified by T. Michel.
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -24,42 +24,40 @@
 classdef QFourati < AttitudeFilter
 
     properties (Access = private)
-		Beta = 0.3;
-		Ka = 2;
-		Km = 1;
-	end
-    
-    methods(Access = public)
+        Beta = 0.3;
+        Ka = 2;
+        Km = 1;
+    end
 
-		function q = update(obj, gyr, acc, mag, dT)
+    methods (Access = public)
 
-			q = obj.quaternion;	
+        function q = update(obj, gyr, acc, mag, dT)
 
-			Km = obj.Km;
-			Ka = obj.Ka;
+            q = obj.quaternion;
 
-			acc = acc/norm(acc);
-			mag = mag/norm(mag);
+            Km = obj.Km;
+            Ka = obj.Ka;
+
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
 
             estimate_A = quatrotate(q, obj.AccRefNormalized);
             estimate_M = quatrotate(q, obj.MagRefNormalized);
 
+            Measure = [acc mag];
+            Estimate = [estimate_A estimate_M];
+            delta = 2 * [Ka * skew(estimate_A); Km * skew(estimate_M)]';
 
-			Measure = [acc  mag];
-			Estimate = [estimate_A  estimate_M];
-			delta = 2 * [Ka * skew(estimate_A) ; Km * skew(estimate_M)]';
-			
+            % Gradient decent algorithm corrective step
+            dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^ - 1 * delta)';
 
-			% Gradient decent algorithm corrective step
-			dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^-1 * delta)';
+            qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
+            q = q + qDot * dT;
+            q = q / norm(q);
 
-			qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
-			q = q + qDot * dT;
-			q = q/norm(q);
+            obj.quaternion = q;
+        end
 
-			obj.quaternion = q;
-		end
+    end
 
-		
-    end 
 end

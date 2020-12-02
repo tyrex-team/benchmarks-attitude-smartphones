@@ -1,9 +1,9 @@
-% This algorithm is based on QMichelObs and an external magnetic detector 
+% This algorithm is based on QMichelObs and an external magnetic detector
 % 	has been added
 %
 % This algorithm has been implemented by T. Michel
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -14,52 +14,53 @@ classdef QMichelObsExtmag < AttitudeFilter
 
     properties (Access = private)
 
-		MagNormThreshold = 15;
+        MagNormThreshold = 15;
 
-		Beta = 0.3;
-		Ka = 2;
-		Km = 1;
+        Beta = 0.3;
+        Ka = 2;
+        Km = 1;
 
-	end
-    
-    methods(Access = public)
+    end
 
-		function q = update(obj, gyr, acc, mag, dT)
+    methods (Access = public)
 
-			magUpdate = abs( norm(mag) - obj.MagRefNorm) < obj.MagNormThreshold;
+        function q = update(obj, gyr, acc, mag, dT)
 
-			% Use the normal filter
-			q = obj.updateInternal(gyr, acc, mag, dT, magUpdate);
-		end
-		
-    end 
+            magUpdate = abs(norm(mag) - obj.MagRefNorm) < obj.MagNormThreshold;
+
+            % Use the normal filter
+            q = obj.updateInternal(gyr, acc, mag, dT, magUpdate);
+        end
+
+    end
 
     methods (Access = private)
 
-		function q = updateInternal(obj, gyr, acc, mag, dT, magUpdate)
-			
-			q = obj.quaternion;
+        function q = updateInternal(obj, gyr, acc, mag, dT, magUpdate)
 
-			acc = acc/norm(acc);
-			mag = mag/norm(mag);
+            q = obj.quaternion;
 
-			estimate_A = quatrotate(q, obj.AccRefNormalized);
-			estimate_M = quatrotate(q, obj.MagRefNormalized);
-			
-			Measure = [acc  mag];
-			Estimate = [estimate_A  estimate_M];
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
 
-			delta = 2 * [obj.Ka * skew(estimate_A) ; obj.Km * magUpdate * skew(estimate_M)]';
+            estimate_A = quatrotate(q, obj.AccRefNormalized);
+            estimate_M = quatrotate(q, obj.MagRefNormalized);
 
-			% Gradient decent algorithm corrective step
-			dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^-1 * delta)';
+            Measure = [acc mag];
+            Estimate = [estimate_A estimate_M];
 
-			qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
-			q = q + qDot * dT;
-			q = q/norm(q);
+            delta = 2 * [obj.Ka * skew(estimate_A); obj.Km * magUpdate * skew(estimate_M)]';
 
-			obj.quaternion = q;
-		end
+            % Gradient decent algorithm corrective step
+            dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^ - 1 * delta)';
 
-	end
+            qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
+            q = q + qDot * dT;
+            q = q / norm(q);
+
+            obj.quaternion = q;
+        end
+
+    end
+
 end

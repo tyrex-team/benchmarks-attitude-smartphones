@@ -2,7 +2,7 @@
 %
 % It has been implemented by T. Michel
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -11,70 +11,66 @@
 
 classdef QEkfWithoutMag < ExtendedKalmanFilter
 
-	methods (Access = public)
+    methods (Access = public)
 
-		function q = update(obj, gyr, acc, mag, dT)
-			q = obj.updateInternal(gyr, acc, dT);
-		end
+        function q = update(obj, gyr, acc, mag, dT)
+            q = obj.updateInternal(gyr, acc, dT);
+        end
 
-		function q = updateInternal(obj, gyr, acc, dT)
-			q = obj.quaternion.';
-				
-			acc = acc/norm(acc);
-			% -- Prediction ---
+        function q = updateInternal(obj, gyr, acc, dT)
+            q = obj.quaternion.';
 
-			F = obj.C([1 0.5 * dT * gyr]);
-			q_apriori = F * q;
+            acc = acc / norm(acc);
+            % -- Prediction ---
 
-			E = [-q(2:4).' ; skew(q(2:4)) + q(1) * eye(3)];
-			Qk = (dT / 2)^2 * (E * obj.noises.gyroscope * E.');
+            F = obj.C([1 0.5 * dT * gyr]);
+            q_apriori = F * q;
 
-			P_apriori = F * obj.P * F.' + Qk;
-			% -- --------- ---
+            E = [-q(2:4).'; skew(q(2:4)) + q(1) * eye(3)];
+            Qk = (dT / 2)^2 * (E * obj.noises.gyroscope * E.');
 
+            P_apriori = F * obj.P * F.' + Qk;
+            % -- --------- ---
 
+            % -- Correction --
 
-			% -- Correction --
+            dz = [acc - quatrotate(q_apriori, obj.AccRefNormalized)].';
 
-			dz = [acc - quatrotate(q_apriori, obj.AccRefNormalized)].';
+            H = [jacobianES(q_apriori, obj.AccRefNormalized)];
 
-			H = [jacobianES(q_apriori, obj.AccRefNormalized)];
+            R = [obj.noises.accelerometer];
 
-			R = [obj.noises.accelerometer];
+            K = P_apriori * H.' * (H * P_apriori * H.' + R)^ - 1;
+            q = q_apriori + K * dz;
+            P = (eye(4) - K * H) * P_apriori;
 
-		
-			K = P_apriori*H.' * (H*P_apriori*H.' + R)^-1;
-			q = q_apriori + K * dz;
-			P = (eye(4) - K*H) * P_apriori;
+            % -- --------- ---
 
-			% -- --------- ---
+            q = q.' / norm(q);
+            obj.quaternion = q;
+            obj.P = P;
+        end
 
+        function q = initInternal(obj, acc)
 
-			q = q.'/norm(q);
-			obj.quaternion = q; 
-			obj.P = P;
-		end
+            acc = acc / norm(acc);
+            ref = obj.AccRefNormalized;
+            r = dot(acc, ref) + 1;
+            v1 = cross(acc, ref);
+            q = [r v1];
+            q = q / norm(q);
 
+            % fixedYawQuaternion = axisAngle2quatern(obj.AccRefNormalized, 45/180*pi)
+            % q = quatmultiply(fixedYawQuaternion, q);
 
-		function q = initInternal(obj, acc)
+            obj.quaternion = q;
 
-			acc = acc/norm(acc);
-			ref = obj.AccRefNormalized;
-			r = dot(acc, ref) + 1;
-			v1 = cross(acc, ref);
-			q = [ r v1 ];
-			q = q/norm(q);
+        end
 
-			% fixedYawQuaternion = axisAngle2quatern(obj.AccRefNormalized, 45/180*pi)
-			% q = quatmultiply(fixedYawQuaternion, q);
+        function q = init(obj, gyr, acc, mag)
+            q = obj.initInternal(acc);
+        end
 
-			obj.quaternion = q;
-			
-		end
+    end
 
-		function q = init(obj, gyr, acc, mag)
-			q = obj.initInternal(acc);
-		end
-
-	end
 end

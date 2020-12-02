@@ -11,16 +11,16 @@ function [datasetOutput] = matchDataSetTimestamp(datasetReference, datasetInput,
     datasetOutput = zeros(datasetReferenceLength, datasetInputColumns);
     datasetOutputColumns = datasetInputColumns;
 
-
-    if ~isequal(size(defaultValue), [1 datasetOutputColumns-1]) 
+    if ~isequal(size(defaultValue), [1 datasetOutputColumns - 1])
         error('Default value not have the good size');
     end
 
     datasetInputPointer = 0;
+
     for i = 1:datasetReferenceLength
         timestampReference = datasetReference(i, 1);
 
-        while ( datasetInputPointer < datasetInputLength && ...
+        while (datasetInputPointer < datasetInputLength && ...
                 datasetInput(datasetInputPointer + 1, 1) <= timestampReference)
 
             datasetInputPointer = datasetInputPointer + 1;

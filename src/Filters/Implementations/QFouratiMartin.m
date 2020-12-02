@@ -14,7 +14,7 @@
 %
 % It has been implemented by H. Fourati and modified by T. Michel.
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -24,61 +24,59 @@
 classdef QFouratiMartin < AttitudeFilter
 
     properties (Access = private)
-		Beta = 0.3;
-		Ka = 2;
-		Kc = 1;
-	end
+        Beta = 0.3;
+        Ka = 2;
+        Kc = 1;
+    end
 
-	properties (Access = private)
-		CRef;
-		CRefNormalized;
-	end
-    
-    methods(Access = public)
+    properties (Access = private)
+        CRef;
+        CRefNormalized;
+    end
 
-		function q = update(obj, gyr, acc, mag, dT)
+    methods (Access = public)
 
-			q = obj.quaternion;	
+        function q = update(obj, gyr, acc, mag, dT)
 
-			acc = acc / norm(acc);
- 			mag = mag / norm(mag); 
-			c = cross(acc, mag);
-			c = c/norm(c);
+            q = obj.quaternion;
+
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
+            c = cross(acc, mag);
+            c = c / norm(c);
 
             estimate_A = quatrotate(q, obj.AccRefNormalized);
             estimate_C = quatrotate(q, obj.CRefNormalized);
 
+            Measure = [acc c];
+            Estimate = [estimate_A estimate_C];
+            delta = 2 * [obj.Ka * skew(estimate_A); obj.Kc * skew(estimate_C)]';
 
-			Measure = [acc  c];
-			Estimate = [estimate_A  estimate_C];
-			delta = 2 * [obj.Ka * skew(estimate_A) ; obj.Kc * skew(estimate_C)]';
-			
+            % Gradient decent algorithm corrective step
+            dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^ - 1 * delta)';
 
-			% Gradient decent algorithm corrective step
-			dq = (Measure - Estimate) * ((delta * delta' + 1e-5 * eye(3))^-1 * delta)';
+            qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
+            q = q + qDot * dT;
+            q = q / norm(q);
 
-			qDot = 0.5 * quatmultiply(q, [0 gyr]) + obj.Beta * quatmultiply(q, [0 dq]);
-			q = q + qDot * dT;
-			q = q/norm(q);
+            obj.quaternion = q;
+        end
 
-			obj.quaternion = q;
-		end
+        function notifyReferenceVectorChanged(obj)
 
+            notifyReferenceVectorChanged@AttitudeFilter(obj)
 
-		function notifyReferenceVectorChanged(obj)
+            obj.CRef = cross(obj.AccRef, obj.MagRef);
+            obj.CRefNormalized = obj.CRef / norm(obj.CRef);
 
-			notifyReferenceVectorChanged@AttitudeFilter(obj)
+        end
 
-			obj.CRef = cross(obj.AccRef, obj.MagRef);
-    		obj.CRefNormalized = obj.CRef/norm(obj.CRef);
+        function setParams(obj, params)
+            obj.Beta = params(1);
+            obj.Ka = params(2);
+            obj.Kc = params(3);
+        end
 
-		end
+    end
 
-		function setParams(obj, params)
-			obj.Beta = params(1);
-			obj.Ka = params(2);
-			obj.Kc = params(3);
-		end
-
-    end 
 end

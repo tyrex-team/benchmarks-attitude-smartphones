@@ -6,9 +6,9 @@
 % http://www.sciencedirect.com/science/article/pii/S0967066110000201
 %
 % It has been implemented by sensbio@inria.fr (https://github.com/sensbio/sensbiotk)
-% 	and ported in matlab/modfied by T. Michel. 
+% 	and ported in matlab/modfied by T. Michel.
 %
-% This work is a part of project "On Attitude Estimation with Smartphones" 
+% This work is a part of project "On Attitude Estimation with Smartphones"
 % http://tyrex.inria.fr/mobile/benchmarks-attitude
 %
 % Contact :
@@ -18,132 +18,129 @@
 % TODO: Understand why it's not working in the same way for NED and ENU.
 classdef QMartinB < AttitudeFilter
 
-	properties (Access = public)
-		la = 0.7;
-		lc = 0.1;
-		ld = 0.01;
-		n = 0.01;
-		o = 0.01;
-		k = 10;
-		sigma = 0.002;
-	end
+    properties (Access = public)
+        la = 0.7;
+        lc = 0.1;
+        ld = 0.01;
+        n = 0.01;
+        o = 0.01;
+        k = 10;
+        sigma = 0.002;
+    end
 
-	properties (Access = private)
+    properties (Access = private)
 
-		% Gravity scale factor
-		a_s = 1;
+        % Gravity scale factor
+        a_s = 1;
 
-		% Magnetic field scale factor
-		c_s = 1;
+        % Magnetic field scale factor
+        c_s = 1;
 
-		% Gyro bias
-		wb = [0.0, 0.0, 0.0];
+        % Gyro bias
+        wb = [0.0, 0.0, 0.0];
 
-		% Quaternion director
-		A; C; D;
+        % Quaternion director
+        A; C; D;
 
-	end
+    end
 
+    methods (Access = public)
 
-	methods (Access = public)
+        function setParams(obj, args)
+            obj.la = args(1);
+            obj.lc = args(2);
+            obj.ld = args(3);
+            obj.n = args(4);
+            obj.o = args(5);
+            obj.k = args(6);
+            obj.sigma = args(7);
+        end
 
-		function setParams(obj, args)
-			obj.la = args(1);
-			obj.lc = args(2);
-			obj.ld = args(3);
-			obj.n = args(4);
-			obj.o = args(5);
-			obj.k = args(6);
-			obj.sigma = args(7);
-		end
+        function notifyReferenceVectorChanged(obj)
+            notifyReferenceVectorChanged@AttitudeFilter(obj);
 
-		function notifyReferenceVectorChanged(obj)
-			notifyReferenceVectorChanged@AttitudeFilter(obj);
+            A = obj.AccRef;
+            A(abs(A) > 0) = A(abs(A) > 0) ./ abs(A(abs(A) > 0));
+            B = obj.MagRef;
+            B(abs(B) > 0) = B(abs(B) > 0) ./ abs(B(abs(B) > 0));
+            C = cross(A, B);
+            D = cross(C, A);
 
-			A = obj.AccRef;
-			A(abs(A)>0) = A(abs(A)>0)./abs(A(abs(A)>0));
-			B = obj.MagRef;
-			B(abs(B)>0) = B(abs(B)>0)./abs(B(abs(B)>0));
-			C = cross(A, B);
-			D = cross(C, A);
+            obj.A = A;
+            obj.C = C;
+            obj.D = D;
+        end
 
-			obj.A = A;
-			obj.C = C;
-			obj.D = D;
-		end
+        function q = init(obj, gyr, acc, mag)
 
-		function q = init(obj, gyr, acc, mag)
+            % Quaternions construction
+            yc = cross(acc, mag);
 
-			% Quaternions construction
-			yc = cross(acc, mag);
+            % Normalization
+            acc = acc / norm(acc);
+            mag = mag / norm(mag);
+            yc = yc / norm(yc);
 
-			% Normalization
-			acc = acc / norm(acc);
-			mag = mag / norm(mag);
-			yc = yc / norm(yc);
-			
-			qinv = [-acc(2) 1-acc(3) 0 acc(1)];
-			qinv = qinv / norm(qinv);
-			q = quatconj(qinv);
+            qinv = [-acc(2) 1 - acc(3) 0 acc(1)];
+            qinv = qinv / norm(qinv);
+            q = quatconj(qinv);
 
-			yc = quatrotate(qinv, yc);
+            yc = quatrotate(qinv, yc);
 
-			if yc(2) ~= 1
-				qinv = quatmultiply(qinv, [-yc(1), 0, yc(3), 1 - yc(2)]);
-				qinv = qinv / norm(qinv);
-				q = quatconj(qinv);
-			end
+            if yc(2) ~= 1
+                qinv = quatmultiply(qinv, [-yc(1), 0, yc(3), 1 - yc(2)]);
+                qinv = qinv / norm(qinv);
+                q = quatconj(qinv);
+            end
 
-			obj.quaternion = q;
-		end
+            obj.quaternion = q;
+        end
 
+        function q = update(obj, gyr, acc, mag, dT)
 
-		function q = update(obj, gyr, acc, mag, dT)
-			
-			q = obj.quaternion;
-			qinv = quatinv(q);
+            q = obj.quaternion;
+            qinv = quatinv(q);
 
-			% acc = acc/norm(acc);
-			% mag = mag/norm(mag);
+            % acc = acc/norm(acc);
+            % mag = mag/norm(mag);
 
-			% Compute quaternions products
-			c = cross(acc, mag); % yc = ya * yb
-			d = cross(c, acc); % yd = yc * yb
+            % Compute quaternions products
+            c = cross(acc, mag); % yc = ya * yb
+            d = cross(c, acc); % yd = yc * yb
 
+            % Compute errors
+            EA = obj.A - quatrotate(qinv, acc) / obj.a_s;
+            EC = obj.C - quatrotate(qinv, c) / obj.c_s;
+            ED = obj.D - quatrotate(qinv, d) / (obj.c_s * obj.a_s);
 
-			% Compute errors
-			EA = obj.A - quatrotate(qinv, acc) / obj.a_s;
-			EC = obj.C - quatrotate(qinv, c) / obj.c_s;
-			ED = obj.D - quatrotate(qinv, d) / (obj.c_s * obj.a_s);
+            LE = cross(obj.A, EA) * obj.la + cross(obj.C, EC) * obj.lc + cross(obj.D, ED) * obj.ld;
 
-			LE = cross(obj.A, EA) * obj.la + cross(obj.C, EC) * obj.lc + cross(obj.D, ED) * obj.ld;
+            qdot = 0.5 * quatmultiply(q, [0 gyr - obj.wb]) + quatmultiply([0 LE], q);
 
-			qdot = 0.5 * quatmultiply(q, [0 gyr-obj.wb]) + quatmultiply([0 LE], q);
+            sEA = norm(EA) - EA(3); % sEA = <EA, EA - A> = ||EA||² - <EA, A>
+            sEC = norm(EC) - EC(2); % sEC = <EC, EC - C> = ||EC||² - <EC, C>
+            sED = norm(ED) - ED(1); % sED = <ED, ED - D> = ||ED||² - <ED, D>
 
-			sEA = norm(EA) - EA(3); % sEA = <EA, EA - A> = ||EA||² - <EA, A>
-			sEC = norm(EC) - EC(2); % sEC = <EC, EC - C> = ||EC||² - <EC, C>
-			sED = norm(ED) - ED(1); % sED = <ED, ED - D> = ||ED||² - <ED, D>
+            NE = obj.n * (obj.la * sEA + obj.ld * sED) / (obj.la + obj.ld);
+            OE = obj.o * (obj.lc * sEC + obj.ld * sED) / (obj.lc + obj.ld);
 
-			NE = obj.n * (obj.la * sEA + obj.ld * sED) / (obj.la + obj.ld);
-			OE = obj.o * (obj.lc * sEC + obj.ld * sED) / (obj.lc + obj.ld); 
+            asdot = obj.a_s * NE;
+            csdot = obj.c_s * OE;
 
+            ME = LE * (-obj.sigma);
+            wbdot = quatrotate(q, ME);
 
-			asdot = obj.a_s * NE;
-			csdot = obj.c_s * OE; 
+            % Integration
+            q = q + qdot * dT;
+            obj.wb = obj.wb + wbdot * dT;
+            obj.a_s = obj.a_s + asdot * dT;
+            obj.c_s = obj.c_s + csdot * dT;
 
-			ME = LE * (-obj.sigma);
-			wbdot = quatrotate(q, ME);
+            q = q / norm(q); % normalise quaternion
 
-			% Integration
-			q = q + qdot * dT;
-			obj.wb = obj.wb + wbdot * dT;
-			obj.a_s = obj.a_s + asdot * dT;
-			obj.c_s = obj.c_s + csdot * dT;
+            obj.quaternion = q;
+        end
 
-			q = q / norm(q); % normalise quaternion
+    end
 
-			obj.quaternion = q;
-		end
-
-	end
 end

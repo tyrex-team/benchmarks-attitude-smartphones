@@ -1,50 +1,51 @@
-
 classdef MotionData < handle
-   
-  properties(Access = public)
 
-    datasetLink
+    properties (Access = public)
 
-    timestamp
+        datasetLink
 
-    position = [];
-    attitude = [];
+        timestamp
 
-    % Sometimes qualisys system reports bad values
-    badValue = [];
+        position = [];
+        attitude = [];
 
-  end
-  
+        % Sometimes qualisys system reports bad values
+        badValue = [];
 
-  methods(Access = public)
-
-      % Add bad values manually
-      function addBadValues(obj, badValues)
-
-          for i=1:size(badValues, 1)
-              obj.badValue(obj.getRangeIndexFromTimestamps(badValues(i, 1), badValues(i, 2))) = 1;
-          end
-
-      end
-  
-      function range = getRangeIndexFromTimestamps(obj, startTime, endTime)
-
-        assert(endTime > startTime, 'endTime <= startTime');
-
-        N = length(obj.timestamp);
-        
-        i = 1;
-        while i <= N && obj.timestamp(i) < startTime
-          i = i + 1;
-        end
-
-        startIndex = i;
-
-        while i <= N && obj.timestamp(i) < endTime
-          i = i + 1;
-        end
-
-        range = startIndex:i;
-      end
     end
+
+    methods (Access = public)
+
+        % Add bad values manually
+        function addBadValues(obj, badValues)
+
+            for i = 1:size(badValues, 1)
+                obj.badValue(obj.getRangeIndexFromTimestamps(badValues(i, 1), badValues(i, 2))) = 1;
+            end
+
+        end
+
+        function range = getRangeIndexFromTimestamps(obj, startTime, endTime)
+
+            assert(endTime > startTime, 'endTime <= startTime');
+
+            N = length(obj.timestamp);
+
+            i = 1;
+
+            while i <= N && obj.timestamp(i) < startTime
+                i = i + 1;
+            end
+
+            startIndex = i;
+
+            while i <= N && obj.timestamp(i) < endTime
+                i = i + 1;
+            end
+
+            range = startIndex:i;
+        end
+
+    end
+
 end

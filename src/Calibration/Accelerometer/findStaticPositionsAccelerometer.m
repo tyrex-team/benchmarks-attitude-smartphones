@@ -1,46 +1,49 @@
 function staticPositions = findStaticPositionsAccelerometer(accelerometer, staticPositionTimeInSecond)
 
-	timestamps = accelerometer(:,1);
-	dt = diff(timestamps);
-	acceleration = accelerometer(:, 2:4);
+    timestamps = accelerometer(:, 1);
+    dt = diff(timestamps);
+    acceleration = accelerometer(:, 2:4);
 
     meanDt = mean(dt);
-    staticPositionNumberOfIndex = floor(staticPositionTimeInSecond/meanDt);
+    staticPositionNumberOfIndex = floor(staticPositionTimeInSecond / meanDt);
 
-	movingAverage = centeredMovingAverage(acceleration, meanDt, 0.2);
+    movingAverage = centeredMovingAverage(acceleration, meanDt, 0.2);
 
-	% plot(dataset.timestamp, movingAverage, dataset.timestamp, abs(sqrt(sum(dataset.acceleration.^2,2)) - movingAverage));
+    % plot(dataset.timestamp, movingAverage, dataset.timestamp, abs(sqrt(sum(dataset.acceleration.^2,2)) - movingAverage));
 
-	staticPositions = [];
+    staticPositions = [];
 
-	isStatic = false;
-	staticCounter = 0;
+    isStatic = false;
+    staticCounter = 0;
 
-	for i = 1:length(acceleration)
+    for i = 1:length(acceleration)
 
-		diffWithMovingAverage = abs(norm(acceleration(i, :)) - movingAverage(i));
+        diffWithMovingAverage = abs(norm(acceleration(i, :)) - movingAverage(i));
 
-		if diffWithMovingAverage < 0.2
+        if diffWithMovingAverage < 0.2
 
-			if ~isStatic
-				isStatic = true;
-				staticCounter = 1;
-			else 
-				staticCounter = staticCounter + 1;
-			end
+            if ~isStatic
+                isStatic = true;
+                staticCounter = 1;
+            else
+                staticCounter = staticCounter + 1;
+            end
 
-		else
-			if isStatic
-				firstIndex = i - staticCounter;
-				lastIndex = i - 1;
-				if lastIndex - firstIndex > staticPositionNumberOfIndex
-					staticPositions(end+1, :) = [firstIndex lastIndex];
-				end
-			end
+        else
 
-			isStatic = false;
-		end
+            if isStatic
+                firstIndex = i - staticCounter;
+                lastIndex = i - 1;
 
-	end
+                if lastIndex - firstIndex > staticPositionNumberOfIndex
+                    staticPositions(end + 1, :) = [firstIndex lastIndex];
+                end
+
+            end
+
+            isStatic = false;
+        end
+
+    end
 
 end
