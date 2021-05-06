@@ -1,6 +1,7 @@
 function vo = quatrotate(q, v, form)
 
-    qw = q(1); qx = q(2); qy = q(3); qz = q(4);
+    qNormalized = q/norm(q);
+    qw = qNormalized(1); qx = qNormalized(2); qy = qNormalized(3); qz = qNormalized(4);
     vx = v(1); vy = v(2); vz = v(3);
 
     if ~exist('form', 'var')
