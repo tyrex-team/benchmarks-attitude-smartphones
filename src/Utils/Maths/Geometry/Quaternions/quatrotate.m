@@ -23,6 +23,4 @@ function vo = quatrotate(q, v, form)
             error('Not a known form (short or long)');
     end
 
-    vo = vo / norm(vo);
-
 end
