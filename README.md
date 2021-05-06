@@ -24,7 +24,7 @@ Create a new benchmark instance. Load sensors noises, calibrations and datasets.
 
 The benchmark process takes a while and memory if you compute all datasets with all algorithms, all sampling, all calibrations... (e.g. 26 hours on a macbook pro and 25 Go). In order to avoid to restart the full process each time, you can save/open the benchmark:
 	
-	save(AttitudeBenchmarks.path, 'benchmark', '-v7.3'); % You may need to create saved folder in the root directory
+	save(AttitudeBenchmarks.path, 'benchmark', '-v7.3'); % current state is saved in ./datasets/saved/ (default path)
 	load(AttitudeBenchmarks.path);
 
 Results are stored in **AttitudeBenchmarkResults** class and aggregated data on means can be computed using **compare** function
